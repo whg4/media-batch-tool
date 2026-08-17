@@ -20,13 +20,29 @@ case "$(uname -s)" in
       *) echo "Unsupported arch: $ARCH" >&2; exit 1 ;;
     esac
     echo "Fetching macOS static ffmpeg ($SUFFIX)..."
-    curl -L -o .staging/ffmpeg.zip https://evermeet.cx/ffmpeg/getrelease/zip
-    curl -L -o .staging/ffprobe.zip https://evermeet.cx/ffmpeg/getrelease/ffprobe/zip
-    unzip -o -j .staging/ffmpeg.zip 'ffmpeg' -d .staging
-    unzip -o -j .staging/ffprobe.zip 'ffprobe' -d .staging
-    mv .staging/ffmpeg "ffmpeg-$SUFFIX"
-    mv .staging/ffprobe "ffprobe-$SUFFIX"
-    chmod +x "ffmpeg-$SUFFIX" "ffprobe-$SUFFIX"
+    if [ "$ARCH" = "arm64" ]; then
+      # arm64 native static builds (osxexperts.net); retry a few times (unstable server)
+      for i in 1 2 3 4; do
+        curl -L -C - -o .staging/ffmpeg.zip https://www.osxexperts.net/ffmpeg9arm.zip && break
+        sleep 2
+      done
+      for i in 1 2 3 4; do
+        curl -L -C - -o .staging/ffprobe.zip https://www.osxexperts.net/ffprobe9arm.zip && break
+        sleep 2
+      done
+      unzip -o .staging/ffmpeg.zip 'ffmpeg' -d .staging || unzip -o .staging/ffmpeg.zip -d .staging
+      unzip -o .staging/ffprobe.zip 'ffprobe' -d .staging || unzip -o .staging/ffprobe.zip -d .staging
+      find .staging -type f -name 'ffmpeg' -exec cp {} "ffmpeg-$SUFFIX" \;
+      find .staging -type f -name 'ffprobe' -exec cp {} "ffprobe-$SUFFIX" \;
+    else
+      curl -L -o .staging/ffmpeg.zip https://evermeet.cx/ffmpeg/getrelease/zip
+      curl -L -o .staging/ffprobe.zip https://evermeet.cx/ffmpeg/getrelease/ffprobe/zip
+      unzip -o -j .staging/ffmpeg.zip 'ffmpeg' -d .staging
+      unzip -o -j .staging/ffprobe.zip 'ffprobe' -d .staging
+      mv .staging/ffmpeg "ffmpeg-$SUFFIX"
+      mv .staging/ffprobe "ffprobe-$SUFFIX"
+    fi
+    chmod +x "ffmpeg-$SUFFIX" "ffprobe-$SUFFIX" 2>/dev/null || true
     ;;
   MINGW*|MSYS*|CYGWIN*)
     echo "Fetching Windows static ffmpeg..."
