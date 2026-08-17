@@ -242,3 +242,40 @@ async fn batch_200_photos_through_queue() {
     );
     let _ = std::fs::remove_dir_all(&dir);
 }
+
+#[tokio::test]
+async fn unwritable_output_dir_reports_error() {
+    let dir = temp_dir("readonly");
+    let img = dir.join("r.jpg");
+    make_image(&img, 300, 200, 3);
+    let out_dir = dir.join("out");
+    std::fs::create_dir_all(&out_dir).unwrap();
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        std::fs::set_permissions(&out_dir, std::fs::Permissions::from_mode(0o555)).unwrap();
+    }
+    let files = vec![file_info(&img, "r1", MediaKind::Image)];
+    let app = tauri::test::mock_app().handle().clone();
+    let outputs: crate::queue::OutputsMap = Arc::new(Mutex::new(std::collections::HashMap::new()));
+    let summary = run_batch(
+        app,
+        files,
+        slim_template(),
+        out_dir.clone(),
+        Arc::new(AtomicBool::new(false)),
+        outputs.clone(),
+    )
+    .await;
+
+    assert_eq!(summary.failed, 1, "unwritable output dir must produce a per-file error");
+    let item = &summary.items[0];
+    assert!(item.error.is_some(), "error must be reported to the UI");
+
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        let _ = std::fs::set_permissions(&out_dir, std::fs::Permissions::from_mode(0o755));
+    }
+    let _ = std::fs::remove_dir_all(&dir);
+}
