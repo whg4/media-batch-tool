@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>媒体批处理工具 · 免费、轻量、本地处理</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      body { font-family: system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; }
+    </style>
+  </head>
+  <body class="bg-slate-50 text-slate-900 antialiased">
+    <header class="border-b border-slate-200 bg-white/80 backdrop-blur sticky top-0 z-10">
+      <div class="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
+        <span class="text-lg font-bold">⚡ 媒体批处理工具</span>
+        <nav class="flex items-center gap-6 text-sm text-slate-600">
+          <a href="#features" class="hover:text-slate-900">功能</a>
+          <a href="#download" class="hover:text-slate-900">下载</a>
+          <a href="#privacy" class="hover:text-slate-900">隐私</a>
+        </nav>
+      </div>
+    </header>
+
+    <section class="mx-auto max-w-5xl px-6 pt-20 pb-14 text-center">
+      <h1 class="text-4xl font-extrabold tracking-tight sm:text-5xl">
+        图片与视频批量处理，
+        <span class="text-sky-600">简单到只需要三步</span>
+      </h1>
+      <p class="mx-auto mt-5 max-w-2xl text-lg text-slate-600">
+        智能瘦身 · 格式转换 · 社交媒体适配。完全免费，安装包只有十几 MB，
+        所有文件只在本机处理。
+      </p>
+      <div class="mt-8 flex flex-wrap justify-center gap-4">
+        <a href="#download" class="rounded-xl bg-sky-600 px-7 py-3 font-medium text-white shadow-lg shadow-sky-600/20 hover:bg-sky-700">下载 macOS 版</a>
+        <a href="#download" class="rounded-xl border border-slate-300 bg-white px-7 py-3 font-medium text-slate-700 hover:bg-slate-100">下载 Windows 版</a>
+      </div>
+    </section>
+
+    <section id="features" class="mx-auto max-w-5xl px-6 pb-16">
+      <div class="grid gap-5 sm:grid-cols-3">
+        <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <span class="text-3xl">✨</span>
+          <h3 class="mt-3 font-semibold">智能瘦身</h3>
+          <p class="mt-2 text-sm text-slate-600">自动压缩图片与视频，肉眼几乎无差别，体积大幅减小。压缩后更大？自动跳过。</p>
+        </div>
+        <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <span class="text-3xl">🔄</span>
+          <h3 class="mt-3 font-semibold">格式转换</h3>
+          <p class="mt-2 text-sm text-slate-600">JPG / PNG / WebP / AVIF / MP4 互转，批量一次完成。</p>
+        </div>
+        <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <span class="text-3xl">📱</span>
+          <h3 class="mt-3 font-semibold">社交媒体适配</h3>
+          <p class="mt-2 text-sm text-slate-600">微信、抖音、小红书、Instagram 等平台模板，一键适配规格。</p>
+        </div>
+        <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <span class="text-3xl">🪶</span>
+          <h3 class="mt-3 font-semibold">轻量快速</h3>
+          <p class="mt-2 text-sm text-slate-600">安装包 5–15 MB，秒开启动，基于 Rust + Tauri。</p>
+        </div>
+        <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <span class="text-3xl">🚀</span>
+          <h3 class="mt-3 font-semibold">高性能批量</h3>
+          <p class="mt-2 text-sm text-slate-600">多核并行处理，千张照片也不卡，实时进度、随时停止。</p>
+        </div>
+        <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <span class="text-3xl">💧</span>
+          <h3 class="mt-3 font-semibold">自定义水印</h3>
+          <p class="mt-2 text-sm text-slate-600">文字或图片水印，位置与透明度随意调。</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="privacy" class="bg-white py-16">
+      <div class="mx-auto max-w-3xl px-6 text-center">
+        <span class="text-4xl">🔒</span>
+        <h2 class="mt-3 text-2xl font-bold">完全本地处理</h2>
+        <p class="mt-3 text-slate-600">
+          你的照片和视频永远不会离开你的电脑。没有账号、没有云上传、没有数据收集。
+        </p>
+      </div>
+    </section>
+
+    <section id="download" class="mx-auto max-w-5xl px-6 py-16 text-center">
+      <h2 class="text-2xl font-bold">下载</h2>
+      <p class="mt-2 text-sm text-slate-500">当前版本 0.1.0 · 完全免费</p>
+      <div class="mt-6 flex flex-wrap justify-center gap-4">
+        <a href="#" class="rounded-xl bg-slate-900 px-6 py-3 font-medium text-white hover:bg-slate-700">macOS (Apple Silicon)</a>
+        <a href="#" class="rounded-xl bg-slate-900 px-6 py-3 font-medium text-white hover:bg-slate-700">macOS (Intel)</a>
+        <a href="#" class="rounded-xl bg-slate-900 px-6 py-3 font-medium text-white hover:bg-slate-700">Windows</a>
+      </div>
+      <p class="mt-4 text-xs text-slate-400">下载链接将在正式发布后提供（GitHub Releases）。</p>
+    </section>
+
+    <footer class="border-t border-slate-200 py-8 text-center text-xs text-slate-400">
+      © 2026 媒体批处理工具 · 开源友好 · 本地优先
+    </footer>
+  </body>
+</html>

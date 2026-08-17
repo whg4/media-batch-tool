@@ -1,0 +1,11 @@
+node_modules
+dist
+target
+src-tauri/target
+src-tauri/binaries/*
+!src-tauri/binaries/.gitkeep
+test-results
+playwright-report
+scripts/updater.private.key
+*.log
+.DS_Store

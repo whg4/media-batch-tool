@@ -1,0 +1,55 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "MediaBatchTool",
+  "version": "0.1.0",
+  "identifier": "com.mediabatch.app",
+  "build": {
+    "beforeDevCommand": "pnpm dev",
+    "devUrl": "http://localhost:1420",
+    "beforeBuildCommand": "pnpm build",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "媒体批处理工具",
+        "width": 1100,
+        "height": 720,
+        "minWidth": 900,
+        "minHeight": 620
+      }
+    ],
+    "security": {
+      "csp": null,
+      "assetProtocol": {
+        "enable": true,
+        "scope": [
+          "$APPDATA/**"
+        ]
+      }
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "externalBin": [
+      "binaries/ffmpeg",
+      "binaries/ffprobe"
+    ]
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "lXyKASu8FqUo04386f6L+n1idcq8zYYKS+vXO3D5g1E=",
+      "endpoints": [
+        "https://github.com/weihualau/media-batch-tool/releases/latest/download/latest.json"
+      ]
+    }
+  }
+}
