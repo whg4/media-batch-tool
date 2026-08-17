@@ -9,8 +9,8 @@ use tauri::{AppHandle, Emitter};
 
 pub type OutputsMap = Arc<Mutex<HashMap<String, ProcessedItem>>>;
 
-pub async fn run_batch(
-    app: AppHandle,
+pub async fn run_batch<R: tauri::Runtime>(
+    app: tauri::AppHandle<R>,
     files: Vec<FileInfo>,
     template: Template,
     out_dir: PathBuf,
@@ -67,9 +67,7 @@ pub async fn run_batch(
                         );
                     }
                     let item = process_one_image(&app2, f, &t2, &out2);
-                    if let Some(pi) = outputs2.lock().unwrap().get_mut(&f.id) {
-                        *pi = item.clone();
-                    }
+                    outputs2.lock().unwrap().insert(f.id.clone(), item.clone());
                     let d = done2.fetch_add(1, Ordering::SeqCst) + 1;
                     let _ = app2.emit("batch_progress", serde_json::json!({ "done": d, "total": total2 }));
                     (*idx, item)
@@ -154,9 +152,7 @@ pub async fn run_batch(
                             "output_path": item.output_path,
                         }),
                     );
-                    if let Some(pi) = outputs2.lock().unwrap().get_mut(&f.id) {
-                        *pi = item.clone();
-                    }
+                    outputs2.lock().unwrap().insert(f.id.clone(), item.clone());
                 } else {
                     let _ = app2.emit(
                         "file_failed",
@@ -195,7 +191,7 @@ pub async fn run_batch(
     summary
 }
 
-fn process_one_image(app: &AppHandle, file: &FileInfo, template: &Template, out_dir: &Path) -> ProcessedItem {
+fn process_one_image<R: tauri::Runtime>(app: &tauri::AppHandle<R>, file: &FileInfo, template: &Template, out_dir: &Path) -> ProcessedItem {
     let _ = app.emit("file_started", serde_json::json!({ "id": file.id, "name": file.name }));
     let res = image_proc::process_image(Path::new(&file.path), out_dir, template);
     match res {

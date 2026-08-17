@@ -95,6 +95,10 @@ bash scripts/build-release.sh
 
 ## 已知限制
 
+> Windows 交叉编译说明：本地 macOS 无法对 `x86_64-pc-windows-msvc` 做 `cargo check`，
+> 因为 `tauri-plugin-updater` 的 C 依赖（ring）需要 Windows C 工具链；
+> Windows 的权威验证在 CI 的 `windows-latest` runner 上执行（`.github/workflows/ci.yml`）。
+
 - HEIC 在 macOS 通过系统 `sips` 解码，Windows 端暂无 HEIC 解码
 - WebP 损失压缩使用 `webp` crate（libwebp），AVIF 需要 ffmpeg 可用
 - 文字水印需要系统字体（macOS PingFang / Windows 微软雅黑），可用 `MBT_WATERMARK_FONT` 覆盖

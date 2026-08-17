@@ -26,8 +26,9 @@ case "$(uname -s)" in
     echo "Fetching Windows static ffmpeg..."
     curl -L -o .staging/ffmpeg.zip https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip
     unzip -o .staging/ffmpeg.zip -d .staging
-    find .staging -name 'ffmpeg.exe' -exec cp {} ffmpeg.exe \;
-    find .staging -name 'ffprobe.exe' -exec cp {} ffprobe.exe \;
+    # Tauri externalBin requires the target-triple suffix
+    find .staging -name 'ffmpeg.exe' -exec cp {} ffmpeg-x86_64-pc-windows-msvc.exe \;
+    find .staging -name 'ffprobe.exe' -exec cp {} ffprobe-x86_64-pc-windows-msvc.exe \;
     ;;
   *)
     echo "Unsupported host OS" >&2
