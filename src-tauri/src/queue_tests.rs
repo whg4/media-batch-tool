@@ -202,3 +202,43 @@ async fn cancel_stops_processing() {
     assert!(item.output_path.is_none());
     let _ = std::fs::remove_dir_all(&dir);
 }
+
+#[tokio::test]
+#[ignore = "release benchmark: cargo test --release -- --ignored batch_200_photos"]
+async fn batch_200_photos_through_queue() {
+    let dir = temp_dir("bench200");
+    let mut files = Vec::new();
+    for i in 0..200 {
+        let p = dir.join(format!("photo_{i}.jpg"));
+        make_image(&p, 2000, 1500, (i % 250) as u8);
+        files.push(file_info(&p, &format!("p{i}"), MediaKind::Image));
+    }
+    let app = tauri::test::mock_app().handle().clone();
+    let outputs: crate::queue::OutputsMap = Arc::new(Mutex::new(std::collections::HashMap::new()));
+    let out_dir = dir.join("out");
+    std::fs::create_dir_all(&out_dir).unwrap();
+
+    let start = std::time::Instant::now();
+    let summary = run_batch(
+        app,
+        files,
+        slim_template(),
+        out_dir,
+        Arc::new(AtomicBool::new(false)),
+        outputs.clone(),
+    )
+    .await;
+    let elapsed = start.elapsed();
+
+    eprintln!(
+        "200 photos (2000x1500) through queue: {:?} | succeeded={} skipped={} failed={} saved={} bytes",
+        elapsed, summary.succeeded, summary.skipped, summary.failed, summary.saved_bytes
+    );
+    assert_eq!(summary.failed, 0, "no file should fail");
+    assert_eq!(summary.succeeded + summary.skipped, 200);
+    assert!(
+        elapsed.as_secs() < 60,
+        "200-photo batch too slow for a consumer tool: {elapsed:?}"
+    );
+    let _ = std::fs::remove_dir_all(&dir);
+}
