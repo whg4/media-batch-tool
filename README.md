@@ -113,7 +113,7 @@ bash scripts/build-release.sh
 > 无头/CI 环境会超时，`build-release.sh` 用 `--skip-jenkins` 跳过该步骤。
 
 - **签名 / 公证**：macOS 需 Developer ID + notarization（CI 中配置证书）；Windows 建议 EV 证书。
-- **自动更新**：`tauri-plugin-updater`。发布时生成签名 `latest.json`（见 `scripts/build-update-json.sh`），私钥存 CI Secret `TAURI_SIGNING_PRIVATE_KEY`（本地示例：`scripts/updater.private.key`，已被 gitignore）。
+- **自动更新**：`tauri-plugin-updater`。发布时生成签名 `latest.json`（见 `scripts/build-update-json.sh`），私钥 `scripts/updater.key`（gitignore）+ 公钥 `scripts/updater.key.pub`（已提交）；CI 用 Secret `TAURI_SIGNING_PRIVATE_KEY`。
 - **CI**：`.github/workflows/ci.yml` 双平台构建 + 测试；`release.yml` 打 tag 触发发布。
 - **ffmpeg 授权**：使用 LGPL 版静态构建可避免 GPL 传染；最终产品随附开源声明。
 

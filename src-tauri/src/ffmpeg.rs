@@ -96,17 +96,3 @@ pub fn sips_to_png(input: &Path, out: &Path) -> Result<()> {
     }
 }
 
-/// Simple test helper: probe a file with ffprobe and return whether it exists / is media.
-#[cfg(test)]
-pub fn probe_is_media(path: &Path) -> bool {
-    let ffprobe = find_ffprobe().ok();
-    match ffprobe {
-        Some(p) => Command::new(p)
-            .args(["-v", "error", "-show_format", "-of", "json"])
-            .arg(path)
-            .output()
-            .map(|o| o.status.success())
-            .unwrap_or(false),
-        None => false,
-    }
-}

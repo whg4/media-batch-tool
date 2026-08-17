@@ -6,6 +6,6 @@ src-tauri/binaries/*
 !src-tauri/binaries/.gitkeep
 test-results
 playwright-report
-scripts/updater.private.key
+scripts/updater.key
 *.log
 .DS_Store

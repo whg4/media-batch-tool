@@ -13,14 +13,20 @@ mkdir -p .staging
 
 case "$(uname -s)" in
   Darwin)
-    echo "Fetching macOS static ffmpeg..."
+    ARCH="$(uname -m)"
+    case "$ARCH" in
+      arm64) SUFFIX="aarch64-apple-darwin" ;;
+      x86_64) SUFFIX="x86_64-apple-darwin" ;;
+      *) echo "Unsupported arch: $ARCH" >&2; exit 1 ;;
+    esac
+    echo "Fetching macOS static ffmpeg ($SUFFIX)..."
     curl -L -o .staging/ffmpeg.zip https://evermeet.cx/ffmpeg/getrelease/zip
     curl -L -o .staging/ffprobe.zip https://evermeet.cx/ffmpeg/getrelease/ffprobe/zip
     unzip -o -j .staging/ffmpeg.zip 'ffmpeg' -d .staging
     unzip -o -j .staging/ffprobe.zip 'ffprobe' -d .staging
-    mv .staging/ffmpeg ffmpeg
-    mv .staging/ffprobe ffprobe
-    chmod +x ffmpeg ffprobe
+    mv .staging/ffmpeg "ffmpeg-$SUFFIX"
+    mv .staging/ffprobe "ffprobe-$SUFFIX"
+    chmod +x "ffmpeg-$SUFFIX" "ffprobe-$SUFFIX"
     ;;
   MINGW*|MSYS*|CYGWIN*)
     echo "Fetching Windows static ffmpeg..."

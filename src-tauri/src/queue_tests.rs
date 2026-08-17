@@ -7,7 +7,7 @@ use std::sync::atomic::AtomicBool;
 use std::sync::mpsc;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
-use tauri::{Emitter, Listener};
+use tauri::Listener;
 
 fn temp_dir(tag: &str) -> PathBuf {
     let d = std::env::temp_dir().join(format!("mbt_queue_{tag}_{}", uuid::Uuid::new_v4()));

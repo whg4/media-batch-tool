@@ -46,7 +46,7 @@
   },
   "plugins": {
     "updater": {
-      "pubkey": "lXyKASu8FqUo04386f6L+n1idcq8zYYKS+vXO3D5g1E=",
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDY5Qjc1RDMzNzY4OTY3REUKUldUZVo0bDJNMTIzYVVYMFVLUThSdEpqTWpsTnBvNXpYZEg3TkdEeDk2blpnS1RLV08ya0lpL3AK",
       "endpoints": [
         "https://github.com/weihualau/media-batch-tool/releases/latest/download/latest.json"
       ]

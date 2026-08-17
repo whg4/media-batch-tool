@@ -1,5 +1,7 @@
 #[cfg(test)]
 mod queue_tests;
+#[cfg(test)]
+mod updater_sig_test;
 mod commands;
 mod ffmpeg;
 mod image_proc;
