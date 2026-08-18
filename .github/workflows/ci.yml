@@ -51,6 +51,48 @@ jobs:
         working-directory: src-tauri
         run: cargo test
 
-      - name: Tauri build
+      - name: Fetch ffmpeg sidecars
+        # required: externalBin sidecars must exist for cargo build to succeed
+        run: bash scripts/fetch-ffmpeg.sh
+
+      - name: Tauri build (production profile check)
         working-directory: src-tauri
-        run: cargo build --release
+        # custom-protocol makes cargo build behave like `tauri build` (embeds
+        # the frontend assets instead of pointing at the dev server).
+        run: cargo build --release --features tauri/custom-protocol
+
+  real-app-e2e:
+    # WebdriverIO embedded-driver E2E against the real macOS binary.
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Rust cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - name: Frontend install
+        run: pnpm install --frozen-lockfile
+
+      - name: Fetch ffmpeg sidecars
+        run: bash scripts/fetch-ffmpeg.sh
+
+      - name: Build E2E binary (dev frontend + release with wdio)
+        run: pnpm e2e:real:build
+
+      - name: Run real-app E2E
+        run: pnpm test:e2e:real

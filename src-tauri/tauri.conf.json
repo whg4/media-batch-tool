@@ -27,7 +27,8 @@
           "$APPDATA/**"
         ]
       }
-    }
+    },
+    "withGlobalTauri": true
   },
   "bundle": {
     "active": true,

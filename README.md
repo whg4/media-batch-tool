@@ -71,7 +71,11 @@ media-batch-tool/
 │   │   ├── thumbnails.rs   # 缩略图生成
 │   │   └── ffmpeg.rs       # ffmpeg/ffprobe 解析（env → sidecar → PATH）
 │   ├── binaries/           # ffmpeg/ffprobe sidecar（gitignored）
+│   ├── capabilities/       # 生产权限（不含 WDIO）
+│   ├── capabilities-e2e/   # 仅 E2E 构建（--features wdio）追加的 WDIO 权限
 │   └── tauri.conf.json
+├── e2e/                    # Playwright（浏览器 mock）+ real-app.spec.ts（真实应用）
+├── wdio.conf.ts            # WebdriverIO 真实应用 E2E 配置
 ├── scripts/                # fetch-ffmpeg / build-update-json / 基准
 ├── docs/                   # 设计文档与实施计划
 └── website/                # 官网/下载页（静态）
@@ -94,7 +98,20 @@ pnpm vitest run       # 前端单元测试
 cd src-tauri
 cargo test            # Rust 单元 + 集成测试（含真实媒体 fixture）
 cargo test --release -- --ignored bench_compression   # 压缩基准
+
+# 浏览器模式主流程 E2E（需先启动 dev server：pnpm dev）
+pnpm exec playwright test
+
+# 真实应用 E2E（WebdriverIO + 嵌入式 WebDriver，macOS 原生）
+pnpm e2e:real:build   # ① 构建 E2E 二进制：dev 前端 + release + --features "wdio tauri/custom-protocol"
+pnpm test:e2e:real    # ② 启动真实 app 跑完整 智能瘦身 流程
 ```
+
+### 真实应用 E2E 说明
+
+- 测试二进制是 **release** 构建（release 才嵌入前端资源）并启用 `wdio` feature（注册嵌入式 WebDriver 与 `browser.tauri.execute`）；前端用 `vite build --mode development`（`NODE_ENV=development`）构建，以便打包进 `@wdio/tauri-plugin` 与测试钩子。
+- `wdio` 是可选 feature：生产构建（`cargo build --release --features tauri/custom-protocol` 或 `tauri build`）不包含任何 WDIO 代码；`build.rs` 按 feature 切换 capabilities（`capabilities-e2e/` 只在 `--features wdio` 时生效）。
+- 原生文件对话框无法自动化，测试通过 dev-only 钩子 `window.__MBT_ADD_PATHS__`（仅在 DEV 前端构建中存在，生产构建会被 tree-shake）向应用注入 `e2e/fixtures/` 里的真实媒体文件。
 
 ## 打包发布
 

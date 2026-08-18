@@ -9,6 +9,12 @@ edition = "2021"
 name = "media_batch_tool_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
+[features]
+default = []
+# Enables the WebdriverIO test plugins (embedded WebDriver). Only used for the
+# real-app E2E build: pnpm build:dev && cargo build --release --features wdio
+wdio = ["dep:tauri-plugin-wdio", "dep:tauri-plugin-wdio-webdriver"]
+
 [build-dependencies]
 tauri-build = { version = "2", features = [] }
 
@@ -22,6 +28,11 @@ tauri = { version = "2", features = ["protocol-asset"] }
 tauri-plugin-opener = "2"
 tauri-plugin-dialog = "2"
 tauri-plugin-updater = "2"
+# WDIO test-only plugins (embedded WebDriver + execute/mock API). They are
+# optional deps behind the `wdio` feature so production/release builds never
+# link or start the WebDriver server. Enable with: cargo build --features wdio
+tauri-plugin-wdio = { version = "1", optional = true }
+tauri-plugin-wdio-webdriver = { version = "1", optional = true }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 image = { version = "0.25", default-features = false, features = ["png", "jpeg", "webp", "gif", "bmp", "tiff", "ico", "hdr"] }
