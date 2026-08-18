@@ -2,7 +2,7 @@
 name = "media-batch-tool"
 version = "0.1.0"
 description = "多合一媒体批处理工具：智能瘦身、格式转换、社交媒体适配"
-authors = ["weihualau"]
+authors = ["whg4 <liuweihua@infinitestar.net>"]
 edition = "2021"
 
 [lib]

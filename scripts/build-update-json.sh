@@ -35,7 +35,7 @@ cat > src-tauri/target/release/bundle/dmg/latest.json <<JSON
   "platforms": {
     "darwin-aarch64": {
       "signature": "$SIGNATURE",
-      "url": "https://github.com/weihualau/media-batch-tool/releases/latest/download/MediaBatchTool_${APP_VERSION}_aarch64.dmg"
+      "url": "https://github.com/whg4/media-batch-tool/releases/latest/download/MediaBatchTool_${APP_VERSION}_aarch64.dmg"
     }
   }
 }
