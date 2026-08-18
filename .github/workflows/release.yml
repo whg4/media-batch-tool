@@ -96,7 +96,12 @@ jobs:
 
       - name: Sign installers & generate latest.json
         run: |
-          VERSION="${GITHUB_REF_NAME#v}"
+          if [ "$GITHUB_REF_TYPE" = "tag" ]; then
+            VERSION="${GITHUB_REF_NAME#v}"
+          else
+            # dispatch dry-run: use the version from tauri.conf.json
+            VERSION="$(python3 -c "import json; print(json.load(open('src-tauri/tauri.conf.json'))['version'])")"
+          fi
           DMG="$(find bundles -name '*.dmg' | head -1)"
           EXE="$(find bundles -name '*setup.exe' | head -1)"
           bash scripts/make-latest-json.sh \
