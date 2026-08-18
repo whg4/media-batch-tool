@@ -270,9 +270,21 @@ async fn unwritable_output_dir_reports_error() {
     )
     .await;
 
-    assert_eq!(summary.failed, 1, "unwritable output dir must produce a per-file error");
-    let item = &summary.items[0];
-    assert!(item.error.is_some(), "error must be reported to the UI");
+    #[cfg(unix)]
+    {
+        assert_eq!(summary.failed, 1, "unwritable output dir must produce a per-file error");
+        let item = &summary.items[0];
+        assert!(item.error.is_some(), "error must be reported to the UI");
+    }
+    #[cfg(not(unix))]
+    {
+        // Windows enforces write permissions via ACLs, which std::set_permissions
+        // cannot express (the read-only attribute does not prevent creating files
+        // inside a directory), so an unwritable-dir scenario can't be constructed
+        // portably here. The per-file error-reporting path itself is asserted on
+        // Unix and in failure_isolation_keeps_batch_going.
+        let _ = summary;
+    }
 
     #[cfg(unix)]
     {

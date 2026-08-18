@@ -8,6 +8,12 @@ edition = "2021"
 [lib]
 name = "media_batch_tool_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
+# All unit tests live in src/lib.rs modules and are compiled into the explicit
+# `lib_tests` integration target (which carries the Windows Common Controls v6
+# manifest needed to run Tauri test binaries on Windows). Disabling the implicit
+# lib test harness avoids running the suite twice; `cargo test --test lib_tests`
+# runs exactly the same tests.
+test = false
 
 [features]
 default = []
