@@ -42,6 +42,10 @@ jobs:
       - name: Frontend install
         run: pnpm install --frozen-lockfile
 
+      - name: Fetch ffmpeg sidecars
+        # required: externalBin sidecars must exist for cargo build/test to succeed
+        run: bash scripts/fetch-ffmpeg.sh
+
       - name: Frontend lint & test
         run: |
           pnpm build
@@ -50,10 +54,6 @@ jobs:
       - name: Rust tests
         working-directory: src-tauri
         run: cargo test
-
-      - name: Fetch ffmpeg sidecars
-        # required: externalBin sidecars must exist for cargo build to succeed
-        run: bash scripts/fetch-ffmpeg.sh
 
       - name: Tauri build (production profile check)
         working-directory: src-tauri
