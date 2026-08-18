@@ -124,9 +124,12 @@ bash scripts/build-release.sh
 
 ## 已知限制
 
-> Windows 交叉编译说明：本地 macOS 无法对 `x86_64-pc-windows-msvc` 做 `cargo check`，
-> 因为 `tauri-plugin-updater` 的 C 依赖（ring）需要 Windows C 工具链；
-> Windows 的权威验证在 CI 的 `windows-latest` runner 上执行（`.github/workflows/ci.yml`）。
+> Windows 验证：
+> - ✅ 本地已通过 `cargo check --target x86_64-pc-windows-gnu`（含 `--tests`）——
+>   安装 mingw-w64 后整个项目（tauri/ring/image/webp 等全部依赖 + 我们的代码）
+>   在 Windows 目标下编译通过；sidecar 用 `scripts/fetch-ffmpeg.sh` 获取
+> - ⏳ MSVC 目标构建/链接与运行行为由 CI 的 `windows-latest` runner 权威验证
+>   （`.github/workflows/ci.yml`）
 
 - HEIC 在 macOS 通过系统 `sips` 解码，Windows 端暂无 HEIC 解码
 - WebP 损失压缩使用 `webp` crate（libwebp），AVIF 需要 ffmpeg 可用
