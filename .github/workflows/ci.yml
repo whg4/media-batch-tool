@@ -51,6 +51,20 @@ jobs:
           pnpm build
           pnpm vitest run
 
+      - name: Point tests at fetched ffmpeg sidecars
+        shell: bash
+        # cargo test runs from src-tauri; without this, video tests fall back
+        # to system PATH ffmpeg which doesn't exist on CI runners.
+        run: |
+          case "$(uname -s)" in
+            Darwin)  echo "MEDIA_BATCH_FFMPEG=binaries/ffmpeg-aarch64-apple-darwin"  >> "$GITHUB_ENV"
+                     echo "MEDIA_BATCH_FFPROBE=binaries/ffprobe-aarch64-apple-darwin" >> "$GITHUB_ENV" ;;
+            MINGW*|MSYS*|CYGWIN*)
+                     echo "MEDIA_BATCH_FFMPEG=binaries/ffmpeg-x86_64-pc-windows-msvc.exe"  >> "$GITHUB_ENV"
+                     echo "MEDIA_BATCH_FFPROBE=binaries/ffprobe-x86_64-pc-windows-msvc.exe" >> "$GITHUB_ENV" ;;
+            *) echo "Unsupported OS for ffmpeg env" >&2 ;;
+          esac
+
       - name: Rust tests
         working-directory: src-tauri
         run: cargo test
