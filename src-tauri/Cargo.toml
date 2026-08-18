@@ -45,3 +45,7 @@ uuid = { version = "1", features = ["v4"] }
 dirs = "6"
 walkdir = "2"
 anyhow = "1"
+
+[[test]]
+name = "lib_tests"
+path = "src/lib.rs"

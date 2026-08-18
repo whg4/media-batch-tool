@@ -67,7 +67,19 @@ jobs:
 
       - name: Rust tests
         working-directory: src-tauri
-        run: cargo test
+        shell: bash
+        # On Windows MSVC only the `lib_tests` target carries the Common Controls
+        # v6 manifest embedded by build.rs; a plain `cargo test` also builds the
+        # app-bin test harness which lacks the manifest and crashes at startup
+        # with STATUS_ENTRYPOINT_NOT_FOUND (0xc0000139). `lib_tests` compiles
+        # src/lib.rs, so it runs the exact same suite.
+        run: |
+          case "$(uname -s)" in
+            MINGW*|MSYS*|CYGWIN*)
+              cargo test --test lib_tests ;;
+            *)
+              cargo test ;;
+          esac
 
       - name: Tauri build (production profile check)
         working-directory: src-tauri
