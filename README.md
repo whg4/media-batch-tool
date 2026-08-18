@@ -115,23 +115,42 @@ pnpm test:e2e:real    # ② 启动真实 app 跑完整 智能瘦身 流程
 
 ## 打包发布
 
-```bash
-# 1. 下载静态 ffmpeg sidecar（mac 或 Windows 各跑一次）
-bash scripts/fetch-ffmpeg.sh
+### 一键发布（推荐，CI 自动完成）
 
-# 2. 打包（生产 ffmpeg 用静态构建，见 scripts/fetch-ffmpeg.sh 注释）
-bash scripts/build-release.sh
-# 等价于：
-#   pnpm tauri build --bundles app
-#   bash src-tauri/target/release/bundle/dmg/bundle_dmg.sh --skip-jenkins <dmg> <app>
+打 tag 即触发 `.github/workflows/release.yml`，自动完成：
+
+1. macOS（Apple Silicon）构建 `.dmg` + Windows（x64）构建 NSIS `.exe`/`.msi`
+2. 用 `TAURI_SIGNING_PRIVATE_KEY` 对安装包做 minisign 签名
+3. 生成双平台 `latest.json`（`scripts/make-latest-json.sh`）
+4. 创建 GitHub Release 并挂载安装包 + `latest.json`
+
+```bash
+git tag v0.1.0 && git push origin v0.1.0
+```
+
+发布后：
+- 官网 https://whg4.github.io/media-batch-tool/ 的下载按钮自动指向最新安装包；
+- 应用内 `tauri-plugin-updater` 通过
+  `releases/latest/download/latest.json` 自动更新。
+
+`workflow_dispatch` 可手动触发做全链路预检（构建 + 签名 + 生成 manifest，不创建 Release）。
+
+### 本地打包（调试用）
+
+```bash
+bash scripts/fetch-ffmpeg.sh            # 下载静态 ffmpeg sidecar
+bash scripts/build-release.sh           # macOS .app + .dmg（跳过 Finder 美化）
+bash scripts/build-update-json.sh       # 签名并生成 latest.json（委托 make-latest-json.sh）
 ```
 
 > 备注：macOS .dmg 的 Finder 美化步骤需要交互式 GUI 会话（AppleScript），
 > 无头/CI 环境会超时，`build-release.sh` 用 `--skip-jenkins` 跳过该步骤。
 
-- **签名 / 公证**：macOS 需 Developer ID + notarization（CI 中配置证书）；Windows 建议 EV 证书。
-- **自动更新**：`tauri-plugin-updater`。发布时生成签名 `latest.json`（见 `scripts/build-update-json.sh`），私钥 `scripts/updater.key`（gitignore）+ 公钥 `scripts/updater.key.pub`（已提交）；CI 用 Secret `TAURI_SIGNING_PRIVATE_KEY`。
-- **CI**：`.github/workflows/ci.yml` 双平台构建 + 测试；`release.yml` 打 tag 触发发布。
+- **代码签名 / 公证**：
+  - macOS 正式发布需 Developer ID 证书 + notarization（Apple 开发者账号）；未签名/未公证的包会被 Gatekeeper 拦截（右键「打开」可绕过，仅建议内部测试）。
+  - Windows 建议 EV 证书；起步可自签（PowerShell `New-SelfSignedCertificate` + `signtool`），SmartScreen 仍会提示「更多信息 → 仍要运行」，附引导说明即可。
+- **自动更新**：`tauri-plugin-updater`。私钥 `scripts/updater.key`（gitignore）+ 公钥 `scripts/updater.key.pub`（已提交）；CI 用 Secret `TAURI_SIGNING_PRIVATE_KEY`。
+- **CI**：`.github/workflows/ci.yml` 双平台构建 + 测试；`release.yml` 打 tag 触发发布；`pages.yml` 部署官网到 GitHub Pages。
 - **授权**：自有代码 MIT（见 `LICENSE`）；随附 ffmpeg/ffprobe 为 GPL 静态构建，详见 `THIRD_PARTY_NOTICES.md`。
 
 ## 设计文档
