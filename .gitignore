@@ -9,3 +9,5 @@ playwright-report
 scripts/updater.key
 *.log
 .DS_Store
+work/
+
