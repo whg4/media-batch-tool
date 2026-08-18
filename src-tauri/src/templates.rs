@@ -208,3 +208,63 @@ pub fn template_by_id(app_data: &PathBuf, id: &str) -> Option<Template> {
     all_templates(app_data).into_iter().find(|t| t.id == id)
 }
 
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::models::TemplateKind;
+
+    fn custom_template(id: &str, kind: TemplateKind) -> Template {
+        Template {
+            id: id.into(),
+            name: id.into(),
+            icon: "⚙️".into(),
+            description: "custom".into(),
+            kind,
+            target_format: Some("jpg".into()),
+            quality: Some(80),
+            max_width: None,
+            max_height: None,
+            video_codec: None,
+            video_crf: None,
+            video_max_dim: None,
+            strip_audio: None,
+            watermark: None,
+            builtin: false,
+        }
+    }
+
+    #[test]
+    fn custom_templates_round_trip_and_merge() {
+        let dir = std::env::temp_dir().join(format!("mbt_tpl_{}", uuid::Uuid::new_v4()));
+        std::fs::create_dir_all(&dir).unwrap();
+
+        // empty by default
+        assert!(load_custom_templates(&dir).is_empty());
+
+        // save → load round-trip
+        let t1 = custom_template("my-wechat", TemplateKind::Social);
+        let t2 = custom_template("my-jpg", TemplateKind::Convert);
+        save_custom_templates(&dir, &[t1.clone(), t2.clone()]).unwrap();
+        let loaded = load_custom_templates(&dir);
+        assert_eq!(loaded.len(), 2);
+        assert_eq!(loaded[0].id, "my-wechat");
+        assert_eq!(loaded[1].id, "my-jpg");
+        assert!(!loaded[0].builtin);
+
+        // all_templates = builtin + custom
+        let all = all_templates(&dir);
+        let builtin_count = builtin_templates().len();
+        assert_eq!(all.len(), builtin_count + 2);
+        assert!(template_by_id(&dir, "my-wechat").is_some());
+        assert!(template_by_id(&dir, "slim-auto").is_some());
+        assert!(template_by_id(&dir, "missing").is_none());
+
+        // overwrite on save
+        save_custom_templates(&dir, &[custom_template("my-jpg", TemplateKind::Convert)]).unwrap();
+        let reloaded = load_custom_templates(&dir);
+        assert_eq!(reloaded.len(), 1);
+
+        std::fs::remove_dir_all(&dir).ok();
+    }
+}
