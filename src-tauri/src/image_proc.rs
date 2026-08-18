@@ -463,6 +463,36 @@ mod tests {
         let _ = std::fs::remove_dir_all(&dir);
     }
 
+
+    #[cfg(target_os = "macos")]
+    #[test]
+    fn heic_decodes_via_sips_fallback() {
+        let dir = std::env::temp_dir().join(format!("mbt_heic_{}", uuid::Uuid::new_v4()));
+        std::fs::create_dir_all(&dir).ok();
+        let png = dir.join("src.png");
+        let img: RgbaImage = ImageBuffer::from_fn(320, 240, |x, y| {
+            Rgba([(x % 256) as u8, (y % 256) as u8, 180, 255])
+        });
+        image::DynamicImage::ImageRgba8(img).save(&png).unwrap();
+        let heic = dir.join("photo.heic");
+        let ok = std::process::Command::new("sips")
+            .args(["-s", "format", "heic"])
+            .arg(&png)
+            .args(["--out"])
+            .arg(&heic)
+            .stdout(std::process::Stdio::null())
+            .stderr(std::process::Stdio::null())
+            .status()
+            .map(|s| s.success())
+            .unwrap_or(false);
+        if !ok || !heic.exists() {
+            return; // sips cannot create HEIC on this system
+        }
+        let decoded = load_image(&heic).expect("HEIC must decode via the sips fallback");
+        assert!(decoded.width() == 320 && decoded.height() == 240);
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
     #[test]
     #[ignore = "benchmark: run with cargo test --release -- --ignored bench_compression"]
     fn bench_compression() {

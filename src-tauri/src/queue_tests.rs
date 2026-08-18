@@ -32,7 +32,9 @@ fn make_video(path: &Path) -> bool {
     std::process::Command::new(ffmpeg)
         .args([
             "-y", "-f", "lavfi", "-i", "testsrc=size=160x90:rate=5",
+            "-f", "lavfi", "-i", "sine=frequency=440:sample_rate=44100",
             "-t", "1", "-c:v", "libx264", "-pix_fmt", "yuv420p",
+            "-c:a", "aac", "-shortest",
         ])
         .arg(path)
         .stdout(std::process::Stdio::null())
@@ -277,5 +279,47 @@ async fn unwritable_output_dir_reports_error() {
         use std::os::unix::fs::PermissionsExt;
         let _ = std::fs::set_permissions(&out_dir, std::fs::Permissions::from_mode(0o755));
     }
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[tokio::test]
+async fn batch_5_videos_with_audio_through_queue() {
+    let dir = temp_dir("videos5");
+    let mut files = Vec::new();
+    let mut made = 0;
+    for i in 0..5 {
+        let p = dir.join(format!("clip_{i}.mp4"));
+        if make_video(&p) {
+            files.push(file_info(&p, &format!("v{i}"), MediaKind::Video));
+            made += 1;
+        }
+    }
+    if made == 0 {
+        return; // ffmpeg unavailable
+    }
+    let app = tauri::test::mock_app().handle().clone();
+    let outputs: crate::queue::OutputsMap = Arc::new(Mutex::new(std::collections::HashMap::new()));
+    let out_dir = dir.join("out");
+    std::fs::create_dir_all(&out_dir).unwrap();
+
+    let summary = run_batch(
+        app,
+        files,
+        slim_template(),
+        out_dir,
+        Arc::new(AtomicBool::new(false)),
+        outputs.clone(),
+    )
+    .await;
+
+    assert_eq!(summary.failed, 0, "all videos should transcode");
+    assert_eq!(summary.succeeded, made);
+    // outputs populated for every video
+    let outputs_guard = outputs.lock().unwrap();
+    assert_eq!(
+        outputs_guard.values().filter(|i| i.output_path.is_some()).count(),
+        made
+    );
+    drop(outputs_guard);
     let _ = std::fs::remove_dir_all(&dir);
 }
