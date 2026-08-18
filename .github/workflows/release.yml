@@ -89,7 +89,10 @@ jobs:
           merge-multiple: true
 
       - name: Write updater signing key
-        run: echo "${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}" > /tmp/updater.key
+        # printf does not add a trailing newline (echo does), and we strip any
+        # line breaks in the stored secret — the minisign base64 decoder
+        # rejects them ("Invalid symbol 10").
+        run: printf '%s' "${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}" | tr -d '\r\n' > /tmp/updater.key
 
       - name: Sign installers & generate latest.json
         run: |
