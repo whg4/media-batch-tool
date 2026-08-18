@@ -57,12 +57,14 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: bundle-${{ matrix.os }}
-          path: src-tauri/target/release/bundle/
+          # `tauri build --target <triple>` outputs under target/<triple>/release
+          path: src-tauri/target/${{ matrix.target }}/release/bundle/
           if-no-files-found: error
 
   release:
+    # Validates the full chain on workflow_dispatch too (sign + latest.json,
+    # artifact uploaded); only a tag push actually creates the GitHub Release.
     needs: build
-    if: github.ref_type == 'tag'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -102,11 +104,19 @@ jobs:
             --notes "媒体批处理工具 v${VERSION} 发布版（全功能免费）" \
             "$DMG" "$EXE"
 
+      - name: Upload latest.json (manifest check on dispatch)
+        uses: actions/upload-artifact@v4
+        with:
+          name: latest-json
+          path: bundles/latest.json
+          if-no-files-found: error
+
       - name: Create GitHub Release
+        if: github.ref_type == 'tag'
         run: |
           gh release create "$GITHUB_REF_NAME" \
             bundles/latest.json \
-            $(find bundles -name '*.dmg' -o -name '*.exe' -o -name '*.sig') \
+            $(find bundles -name '*.dmg' -o -name '*.exe' -o -name '*.msi' -o -name '*.sig') \
             --title "媒体批处理工具 v${GITHUB_REF_NAME#v}" \
             --notes "全功能免费 · 智能瘦身 / 格式转换 / 社交媒体适配 · 本地处理不上传"
         env:
