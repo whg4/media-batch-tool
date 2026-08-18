@@ -47,10 +47,11 @@ jobs:
 
       - name: Build & bundle (Tauri)
         working-directory: src-tauri
-        # pnpm tauri = @tauri-apps/cli (devDependency). The bundler runs the
+        # pnpm tauri = @tauri-apps/cli (devDependency). `tauri build` builds in
+        # release mode by default (no --release flag) and runs the
         # beforeBuildCommand (pnpm build) itself. Updater artifacts are signed
         # later in the release job via scripts/make-latest-json.sh.
-        run: pnpm tauri build --release --target ${{ matrix.target }}
+        run: pnpm tauri build --target ${{ matrix.target }}
 
       - name: Upload bundle
         uses: actions/upload-artifact@v4
