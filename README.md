@@ -83,7 +83,7 @@ media-batch-tool/
 
 ## 开发
 
-前置：Node ≥ 20 + pnpm、Rust stable、ffmpeg（本机 PATH 即可，开发期使用系统 ffmpeg）。
+前置：Node ≥ 22（jsdom 30 需要 ^22.22.2）+ pnpm、Rust stable、ffmpeg（本机 PATH 即可，开发期使用系统 ffmpeg）。
 
 ```bash
 pnpm install
