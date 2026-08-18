@@ -7,7 +7,7 @@ use std::sync::atomic::AtomicBool;
 use std::sync::mpsc;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
-use tauri::Listener;
+use tauri::{Listener, Manager};
 
 fn temp_dir(tag: &str) -> PathBuf {
     let d = std::env::temp_dir().join(format!("mbt_queue_{tag}_{}", uuid::Uuid::new_v4()));
@@ -322,4 +322,130 @@ async fn batch_5_videos_with_audio_through_queue() {
     );
     drop(outputs_guard);
     let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[tokio::test]
+async fn export_files_copies_processed_outputs_and_dedups() {
+    use crate::commands::export_files;
+    use crate::AppState;
+    use std::collections::HashMap;
+
+    let dir = temp_dir("export");
+    let img1 = dir.join("a.jpg");
+    let img2 = dir.join("b.png");
+    make_image(&img1, 1200, 900, 0);
+    make_image(&img2, 800, 600, 1);
+    let files = vec![
+        file_info(&img1, "i1", MediaKind::Image),
+        file_info(&img2, "i2", MediaKind::Image),
+    ];
+
+    // run a real batch so `outputs` holds actual processed output paths
+    let app = tauri::test::mock_app();
+    let outputs: crate::queue::OutputsMap = Arc::new(Mutex::new(HashMap::new()));
+    let out_dir = dir.join("out");
+    std::fs::create_dir_all(&out_dir).unwrap();
+    let summary = run_batch(
+        app.handle().clone(),
+        files,
+        slim_template(),
+        out_dir,
+        Arc::new(AtomicBool::new(false)),
+        outputs.clone(),
+    )
+    .await;
+
+    let succeeded: Vec<String> = summary
+        .items
+        .iter()
+        .filter(|i| i.output_path.is_some())
+        .map(|i| i.id.clone())
+        .collect();
+    assert!(!succeeded.is_empty(), "expected at least one processed output");
+
+    app.manage(AppState {
+        files: Mutex::new(HashMap::new()),
+        outputs: outputs.clone(),
+        batch_running: Mutex::new(false),
+        cancel: Mutex::new(None),
+        thumb_dir: dir.join("thumbs"),
+        output_root: dir.join("batches"),
+        app_data: dir.clone(),
+    });
+    let state = app.state::<AppState>();
+
+    // 1. fresh export: every processed file is copied as `{stem}.{ext}`
+    let target = dir.join("exported");
+    let res = export_files(
+        state.clone(),
+        succeeded.clone(),
+        target.to_string_lossy().into_owned(),
+        false,
+    )
+    .unwrap();
+    assert_eq!(res.exported, succeeded.len(), "errors: {:?}", res.errors);
+    assert!(res.errors.is_empty());
+    {
+        let guard = outputs.lock().unwrap();
+        for id in &succeeded {
+            let item = guard.get(id).expect("output item");
+            let out = Path::new(item.output_path.as_ref().unwrap());
+            let stem = Path::new(&item.name)
+                .file_stem()
+                .unwrap()
+                .to_string_lossy()
+                .into_owned();
+            let ext = out.extension().unwrap().to_string_lossy().into_owned();
+            assert!(
+                target.join(format!("{stem}.{ext}")).exists(),
+                "missing exported {stem}.{ext}"
+            );
+        }
+    }
+
+    // 2. second export with overwrite=false must dedup (`{stem} (1).{ext}`)
+    let res2 = export_files(
+        state.clone(),
+        succeeded.clone(),
+        target.to_string_lossy().into_owned(),
+        false,
+    )
+    .unwrap();
+    assert_eq!(res2.exported, succeeded.len());
+    {
+        let guard = outputs.lock().unwrap();
+        for id in &succeeded {
+            let item = guard.get(id).expect("output item");
+            let out = Path::new(item.output_path.as_ref().unwrap());
+            let stem = Path::new(&item.name)
+                .file_stem()
+                .unwrap()
+                .to_string_lossy()
+                .into_owned();
+            let ext = out.extension().unwrap().to_string_lossy().into_owned();
+            assert!(
+                target.join(format!("{stem} (1).{ext}")).exists(),
+                "missing deduped {stem} (1).{ext}"
+            );
+        }
+    }
+
+    // 3. overwrite=true replaces the original copy instead of deduping
+    let res3 = export_files(
+        state,
+        succeeded.clone(),
+        target.to_string_lossy().into_owned(),
+        true,
+    )
+    .unwrap();
+    assert_eq!(res3.exported, succeeded.len());
+    // overwrite=true must not create *additional* dedup copies (the " (1)"
+    // files from the previous overwrite=false export legitimately remain).
+    let mut extra = 0usize;
+    for entry in std::fs::read_dir(&target).unwrap().flatten() {
+        if entry.file_name().to_string_lossy().contains(" (2).") {
+            extra += 1;
+        }
+    }
+    assert_eq!(extra, 0, "overwrite=true should not create new dedup copies");
 }

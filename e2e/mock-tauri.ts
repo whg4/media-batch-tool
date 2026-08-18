@@ -56,22 +56,23 @@ export const mockTauriInit = () => {
       case "delete_custom_template":
         return templates;
       case "start_batch": {
-        // Emit progress asynchronously so the Processing screen actually
-        // renders (an instant synchronous batch would skip straight to Done).
-        return new Promise((resolve) => {
-          const ids = (args.fileIds as string[]) ?? [];
-          const total = ids.length;
+        // Mirror real backend behaviour: start_batch returns immediately, then
+        // progress events stream in asynchronously and batch_complete arrives
+        // last — so the Processing screen gets time to render.
+        const ids = (args.fileIds as string[]) ?? [];
+        const total = ids.length;
+        const summary = {
+          total, succeeded: total, failed: 0, skipped: 0,
+          saved_bytes: 90_000_000,
+          items: ids.map((id) => ({ id, name: files.find((f) => f.id === id)?.name ?? id, output_path: `/tmp/e2e-out/${id}.out`, output_size: 1000, saved: 2000, skipped: false, error: null })),
+        };
+        setTimeout(() => {
           emit("batch_started", { total, template_id: args.templateId });
           let i = 0;
           const timer = setInterval(() => {
             if (i >= ids.length) {
               clearInterval(timer);
-              emit("batch_complete", {
-                total, succeeded: total, failed: 0, skipped: 0,
-                saved_bytes: 90_000_000,
-                items: ids.map((id) => ({ id, name: files.find((f) => f.id === id)?.name ?? id, output_path: `/tmp/e2e-out/${id}.out`, output_size: 1000, saved: 2000, skipped: false, error: null })),
-              });
-              resolve(null);
+              emit("batch_complete", summary);
               return;
             }
             const id = ids[i];
@@ -81,8 +82,9 @@ export const mockTauriInit = () => {
             const newSize = f ? Math.round(f.size * 0.4) : 1000;
             emit("file_completed", { id, name: f?.name, original_size: f?.size, new_size: newSize, saved: f ? f.size - newSize : 1000, output_path: `/tmp/e2e-out/${id}.out` });
             emit("batch_progress", { done: ++i, total });
-          }, 40);
-        });
+          }, 60);
+        }, 200);
+        return null;
       }
       default:
         throw new Error(`unmocked command: ${cmd}`);
